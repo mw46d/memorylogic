@@ -1,3 +1,5 @@
+require 'java' if RUBY_PLATFORM =~ /java/i
+
 module Memorylogic
   def self.included(klass)
     klass.class_eval do
@@ -10,7 +12,15 @@ module Memorylogic
   end
 
   def self.memory_usage
-    number_to_human_size(`ps -o rss= -p #{Process.pid}`.to_i)
+    size = if RUBY_PLATFORM =~ /java/i
+      runtime = java.lang.Runtime.getRuntime()
+
+      runtime.totalMemory() - runtime.freeMemory()
+    else
+      `ps -o rss= -p #{Process.pid}`.to_i * 1024
+    end
+
+    number_to_human_size(size)
   end
 
   private
